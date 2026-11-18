@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Chapéu minimalista de aniversário</title>
+  <path d="M150 271q150-47 300 0l-18 26H168z" fill="#8128BC"/>
+  <path d="m197 260 103-211 103 211q-104-28-206 0Z" fill="#FFB800"/>
+  <path d="m300 49 14 24-14 17-14-17z" fill="#A52FE2"/><circle cx="300" cy="31" r="15" fill="#A52FE2"/>
+  <circle cx="272" cy="178" r="11" fill="#FFF"/><circle cx="328" cy="215" r="11" fill="#8C2BC8"/>
+</svg>

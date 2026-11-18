@@ -1,0 +1,27 @@
+services:
+  godard-stack:
+    build: .
+    image: godard-stack
+    container_name: godard-stack
+    environment:
+      AGENT_URL: ws://host.docker.internal:${AGENT_PORT:-9374}/terminal
+      AGENT_TOKEN: ${AGENT_TOKEN:?defina AGENT_TOKEN no .env}
+      CONNECTION_ENCRYPTION_KEY: ${CONNECTION_ENCRYPTION_KEY:?defina CONNECTION_ENCRYPTION_KEY no .env}
+      ALLOWED_ORIGIN: http://localhost:${APP_PORT:-9373}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    ports:
+      - 127.0.0.1:${APP_PORT:-9373}:8080
+    volumes:
+      - backend-data:/data
+    restart: unless-stopped
+    networks:
+      - godard
+
+networks:
+  godard:
+    driver_opts:
+      com.docker.network.bridge.name: godard0
+
+volumes:
+  backend-data:

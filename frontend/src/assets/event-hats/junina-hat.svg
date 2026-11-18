@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title desc">
+  <title id="title">Chapéu de palha de Festa Junina</title>
+  <desc id="desc">Chapéu de palha com faixa xadrez vermelha.</desc>
+  <defs>
+    <linearGradient id="straw" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE395"/><stop offset="1" stop-color="#C88627"/></linearGradient>
+    <pattern id="checks" width="32" height="32" patternUnits="userSpaceOnUse"><rect width="32" height="32" fill="#F7E4BD"/><path d="M0 0h16v16H0zm16 16h16v16H16z" fill="#D7403F"/></pattern>
+  </defs>
+  <ellipse cx="300" cy="263" rx="242" ry="51" fill="#B77825"/><ellipse cx="300" cy="254" rx="234" ry="45" fill="url(#straw)"/>
+  <path d="M174 246 204 83q5-30 35-30h122q30 0 35 30l30 163Z" fill="url(#straw)"/>
+  <path d="M207 92q93 28 186 0" fill="none" stroke="#FFF0BA" stroke-width="12" opacity=".45" stroke-linecap="round"/>
+  <path d="M183 183h234l9 56H174Z" fill="url(#checks)"/><path d="M185 204h233" stroke="#A72D35" stroke-width="5" opacity=".55"/>
+  <path d="M121 245q178 29 358 0" fill="none" stroke="#FCE9A5" stroke-width="9" opacity=".48" stroke-linecap="round"/><path d="M204 109q93 22 192 0M196 143q104 23 208 0" fill="none" stroke="#A86922" stroke-width="4" opacity=".35"/>
+</svg>

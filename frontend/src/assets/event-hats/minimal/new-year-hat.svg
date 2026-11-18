@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Cartola minimalista de Ano-Novo</title>
+  <path d="M142 262h316l-22 29H164z" fill="#131B2D"/>
+  <path d="m203 255 18-190h158l18 190z" fill="#26334C"/>
+  <path d="M199 187h202l6 47H193z" fill="#FFB800"/>
+  <path d="M204 91h192" stroke="#53627C" stroke-width="12" stroke-linecap="round"/>
+  <path d="m132 169 7 18 18 7-18 7-7 18-7-18-18-7 18-7Zm351-70 5 13 13 5-13 5-5 13-5-13-13-5 13-5Z" fill="#FFCF30"/>
+</svg>

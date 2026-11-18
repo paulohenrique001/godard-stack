@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Gorro minimalista de Natal</title>
+  <g transform="translate(600 0) scale(-1 1)">
+    <path d="M126 249q75-37 164-21Q269 91 341 64q84-31 122 33 29 49-18 96-44 42-117 53-93-18-202 3Z" fill="#D83C4B"/>
+    <circle cx="470" cy="164" r="35" fill="#FFF8E7"/>
+    <path d="M103 246q105-35 220-13 97 19 181-14 20 20 7 43-103 27-197 9-115-21-209 5-22-8-26-25-2-4 24-5Z" fill="#FFF8E7"/>
+    <path d="M282 221q24-85 70-124" fill="none" stroke="#F56C70" stroke-width="16" stroke-linecap="round"/>
+  </g>
+</svg>

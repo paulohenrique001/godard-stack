@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Cartola minimalista de Carnaval</title>
+  <path d="M152 262h296l-21 28H173z" fill="#6E22A6"/>
+  <path d="M205 255 224 62h152l19 193z" fill="#8C2BC8"/>
+  <path d="M202 188h196l7 44H195z" fill="#FFB800"/>
+  <circle cx="238" cy="210" r="8" fill="#04A7FF"/><circle cx="300" cy="210" r="8" fill="#FFF"/><circle cx="362" cy="210" r="8" fill="#ED5C8B"/>
+  <path d="m134 152 18 18m312-22 18-18M116 223l21-4" stroke="#FFB800" stroke-width="9" stroke-linecap="round"/>
+</svg>

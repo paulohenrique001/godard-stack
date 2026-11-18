@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Chapéu minimalista de Festa Junina</title>
+  <path d="M92 260q208-62 416 0l-22 29H114z" fill="#D69739"/>
+  <path d="m182 252 33-169h170l33 169z" fill="#F6C764"/>
+  <path d="M190 185h220l10 52H180z" fill="#D74745"/>
+  <path d="M230 185v52m70-52v52m70-52v52" stroke="#FFF1C4" stroke-width="11"/>
+  <path d="M212 112h176" stroke="#FFE7A4" stroke-width="12" stroke-linecap="round"/>
+</svg>

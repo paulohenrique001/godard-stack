@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title desc">
+  <title id="title">Cartola de Carnaval</title>
+  <desc id="desc">Cartola roxa com faixa dourada e confetes coloridos.</desc>
+  <defs>
+    <linearGradient id="carnival-purple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#B13AF1"/><stop offset="1" stop-color="#6219A8"/></linearGradient>
+    <linearGradient id="carnival-gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFDC4A"/><stop offset="1" stop-color="#F49A00"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="271" rx="216" ry="39" fill="#4D147F"/>
+  <ellipse cx="300" cy="262" rx="207" ry="34" fill="url(#carnival-purple)"/>
+  <path d="M177 258 198 56Q201 38 222 38h156q21 0 24 18l21 202Z" fill="url(#carnival-purple)"/>
+  <path d="M201 72q99 24 198 0l-3-23q-2-11-18-11H222q-16 0-18 11Z" fill="#D776FF" opacity=".45"/>
+  <path d="M181 190h238l7 55H174Z" fill="url(#carnival-gold)"/>
+  <path d="M177 211h246l3 21H174Z" fill="#FFCE27"/>
+  <circle cx="226" cy="218" r="12" fill="#04B8C7"/><circle cx="300" cy="218" r="12" fill="#FFF"/><circle cx="374" cy="218" r="12" fill="#EC4D87"/>
+  <path d="M128 143q-36 21-33 52 34-7 47-37Z" fill="#04B8C7"/><path d="m460 130 28 20-24 31-28-20Z" fill="#F3B400" transform="rotate(18 474 155)"/><path d="m102 215 18 13-13 18-18-13Z" fill="#EC4D87" transform="rotate(-18 111 230)"/><path d="m487 207 20-6 7 20-20 6Z" fill="#FFF" transform="rotate(22 501 217)"/>
+</svg>

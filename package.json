@@ -1,0 +1,24 @@
+{
+  "name": "godard-stack",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "predev": "npm run setup",
+    "dev": "concurrently --names agente,containers --kill-others \"npm:dev:agent\" \"npm:dev:containers\"",
+    "dev:agent": "node scripts/agent.mjs --watch",
+    "dev:containers": "docker compose -f docker-compose.yml -f docker-compose.dev.yml watch",
+    "agent": "node scripts/agent.mjs",
+    "build": "npm run setup && npm run build:agent && docker compose build",
+    "build:agent": "mvn -B -q -f agent/pom.xml package",
+    "prestart": "npm run setup",
+    "start": "docker compose up --build -d && npm run agent",
+    "rebuild": "node scripts/rebuild.mjs",
+    "stop": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+    "logs": "docker compose logs -f",
+    "reset": "docker compose down -v && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v"
+  },
+  "devDependencies": {
+    "concurrently": "10.0.6"
+  }
+}
