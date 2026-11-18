@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react'
 import { LuCheck, LuDot, LuSquareTerminal, LuX } from 'react-icons/lu'
-import { InlineInput } from '@/features/terminal/inline-input'
-import {
-  MAX_TAB_NAME_LENGTH,
-  tabTitle,
-  type TerminalTab,
-} from '@/features/terminal/use-terminal-tabs'
-import { cn } from '@/lib/utils'
+import { InlineInput } from './inline-input'
+import { MAX_TAB_NAME_LENGTH, tabTitle } from './use-terminal-tabs'
+import type { TerminalTab } from './types'
+import { cn } from '../../shared/lib/cn'
 
 type TerminalTabItemProps = {
   tab: TerminalTab
@@ -15,13 +12,21 @@ type TerminalTabItemProps = {
   onClose: () => void
   onRename: (name: string) => void
   onEditEnd: () => void
+  onKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => void
 }
 
-function TerminalTabItem({ tab, closable, onSelect, onClose, onRename, onEditEnd }: TerminalTabItemProps) {
+function TerminalTabItem({
+  tab,
+  closable,
+  onSelect,
+  onClose,
+  onRename,
+  onEditEnd,
+  onKeyDown,
+}: TerminalTabItemProps) {
   const [editing, setEditing] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const closeButton = useRef<HTMLButtonElement | null>(null)
-  const { active } = tab
   const title = tabTitle(tab)
   const terminalIcon = <LuSquareTerminal className="size-3.5 shrink-0" />
 
@@ -46,8 +51,10 @@ function TerminalTabItem({ tab, closable, onSelect, onClose, onRename, onEditEnd
   return (
     <div
       className={cn(
-        'animate-in fade-in flex h-10 w-52 shrink-0 items-center border-b-2 transition-colors duration-200',
-        active ? 'border-highlight text-highlight' : 'border-transparent text-muted-foreground hover:text-foreground',
+        'animate-in fade-in flex h-10 w-48 shrink-0 items-center border-b-2 transition-colors duration-200',
+        tab.active
+          ? 'border-highlight text-highlight'
+          : 'border-transparent text-muted-foreground hover:text-foreground',
       )}
     >
       {editing ? (
@@ -67,11 +74,15 @@ function TerminalTabItem({ tab, closable, onSelect, onClose, onRename, onEditEnd
         </div>
       ) : (
         <button
+          id={`terminal-tab-${tab.id}`}
           type="button"
           role="tab"
-          aria-selected={active}
-          className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          aria-selected={tab.active}
+          aria-controls={`terminal-panel-${tab.id}`}
+          tabIndex={tab.active ? 0 : -1}
+          className="flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           onClick={onSelect}
+          onKeyDown={onKeyDown}
           onDoubleClick={() => setEditing(true)}
         >
           {terminalIcon}
@@ -84,8 +95,8 @@ function TerminalTabItem({ tab, closable, onSelect, onClose, onRename, onEditEnd
           type="button"
           aria-label={confirming ? `Confirmar fechar ${title}` : `Fechar ${title}`}
           className={cn(
-            'mr-1.5 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-foreground/10',
-            !active && 'hover:text-foreground',
+            'mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-foreground/10',
+            !tab.active && 'hover:text-foreground',
             confirming && 'text-destructive',
           )}
           onClick={() => (confirming ? onClose() : setConfirming(true))}
@@ -93,7 +104,10 @@ function TerminalTabItem({ tab, closable, onSelect, onClose, onRename, onEditEnd
           {confirming ? <LuCheck className="size-3.5" /> : <LuX className="size-3.5" />}
         </button>
       ) : (
-        <span aria-hidden="true" className="mr-1.5 flex size-6 shrink-0 items-center justify-center text-muted-foreground">
+        <span
+          aria-hidden="true"
+          className="mr-1.5 flex size-6 shrink-0 items-center justify-center text-muted-foreground"
+        >
           <LuDot className="size-5" />
         </span>
       )}
@@ -116,10 +130,26 @@ export function TerminalTabBar({
   onRename,
   onEditEnd,
 }: TerminalTabBarProps) {
+  const moveFocus = (event: ReactKeyboardEvent<HTMLButtonElement>, currentId: number) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End']
+    if (!keys.includes(event.key)) return
+    event.preventDefault()
+    const current = tabs.findIndex((tab) => tab.id === currentId)
+    const nextIndex =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? tabs.length - 1
+          : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length
+    const next = tabs[nextIndex]
+    onSelect(next.id)
+    window.requestAnimationFrame(() => document.getElementById(`terminal-tab-${next.id}`)?.focus())
+  }
   return (
     <div
       role="tablist"
       aria-label="Sessões do console"
+      aria-orientation="horizontal"
       className="flex min-w-0 items-center gap-1 overflow-x-auto overflow-y-hidden border-b [scrollbar-width:none]"
       onWheel={(event) => {
         event.currentTarget.scrollLeft += event.deltaY + event.deltaX
@@ -134,6 +164,7 @@ export function TerminalTabBar({
           onClose={() => onClose(tab.id)}
           onRename={(name) => onRename(tab.id, name)}
           onEditEnd={onEditEnd}
+          onKeyDown={(event) => moveFocus(event, tab.id)}
         />
       ))}
     </div>

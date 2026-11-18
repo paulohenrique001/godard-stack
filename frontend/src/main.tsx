@@ -1,19 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from '@/App'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { SettingsProvider } from '@/features/settings/settings-provider'
-import { ThemeProvider } from '@/features/theme/theme-provider'
-import '@/index.css'
+import App from './App'
+import './index.css'
+
+document.addEventListener('contextmenu', (e) => e.preventDefault())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider>
-      <SettingsProvider>
-        <TooltipProvider>
-          <App />
-        </TooltipProvider>
-      </SettingsProvider>
-    </ThemeProvider>
+    <App />
   </StrictMode>,
 )

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Godard Stack",
+  "version": "0.1.0",
+  "identifier": "com.katomus.godardstack",
+  "build": {
+    "beforeDevCommand": "npm --prefix frontend run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "node scripts/prepare-desktop-resources.mjs && npm --prefix frontend run build",
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "enableGTKAppId": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Godard",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 640,
+        "resizable": true,
+        "decorations": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:* ws://127.0.0.1:*; img-src 'self' data: https://api.dicebear.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; base-uri 'self'; form-action 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage"],
+    "category": "DeveloperTool",
+    "linux": {
+      "deb": {
+        "desktopTemplate": "deb.desktop"
+      }
+    },
+    "shortDescription": "Central local para ferramentas de desenvolvimento",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../build/desktop-resources/godard-stack.jar": "godard-stack.jar",
+      "../build/desktop-resources/java-runtime/": "java-runtime/"
+    }
+  }
+}
+

@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title desc">
-  <title id="title">Cartola de Ano-Novo</title>
-  <desc id="desc">Cartola escura com faixa dourada e estrelas de celebração.</desc>
-  <defs><linearGradient id="new-year-black" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#34405A"/><stop offset="1" stop-color="#111827"/></linearGradient><linearGradient id="new-year-gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE573"/><stop offset="1" stop-color="#EAA100"/></linearGradient></defs>
-  <ellipse cx="300" cy="270" rx="220" ry="39" fill="#121827"/><ellipse cx="300" cy="261" rx="211" ry="34" fill="url(#new-year-black)"/><path d="M178 258 201 58q3-24 27-24h144q24 0 27 24l23 200Z" fill="url(#new-year-black)"/>
-  <path d="M198 77q102 28 204 0l-3-20q-2-23-27-23H228q-25 0-27 23Z" fill="#5C6B86" opacity=".36"/><path d="M181 187h238l7 58H174Z" fill="url(#new-year-gold)"/><path d="M181 205h238" stroke="#FFF1A8" stroke-width="6" opacity=".75"/>
-  <path d="m124 150 8 22 22 8-22 8-8 22-8-22-22-8 22-8Zm355-64 6 17 17 6-17 6-6 17-6-17-17-6 17-6Zm-25 132 5 14 14 5-14 5-5 14-5-14-14-5 14-5Z" fill="url(#new-year-gold)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Cartola minimalista de Ano-Novo</title>
+  <path d="M142 262h316l-22 29H164z" fill="#131B2D"/>
+  <path d="m203 255 18-190h158l18 190z" fill="#26334C"/>
+  <path d="M199 187h202l6 47H193z" fill="#FFB800"/>
+  <path d="M204 91h192" stroke="#53627C" stroke-width="12" stroke-linecap="round"/>
+  <path d="m132 169 7 18 18 7-18 7-7 18-7-18-18-7 18-7Zm351-70 5 13 13 5-13 5-5 13-5-13-13-5 13-5Z" fill="#FFCF30"/>
 </svg>

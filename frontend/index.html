@@ -1,11 +1,25 @@
 <!doctype html>
-<html lang="pt-BR" translate="no" class="notranslate">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google" content="notranslate" />
-    <title>Godard Stack</title>
-    <link rel="icon" type="image/svg+xml" href="/src/assets/godard-stack-logo.svg" />
+    <meta name="theme-color" content="#ffb400" />
+    <title>Godard</title>
+    <style>
+      html { background: #ffffff; }
+      html.dark { background: #14161a; }
+    </style>
+    <script>
+      ;(() => {
+        try {
+          const theme = localStorage.getItem('godard-stack.theme')
+          const dark =
+            theme === 'dark' ||
+            (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

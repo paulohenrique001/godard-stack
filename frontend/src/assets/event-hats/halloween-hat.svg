@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title desc">
-  <title id="title">Chapéu de bruxa de Halloween</title>
-  <desc id="desc">Chapéu de bruxa roxo escuro com fivela dourada.</desc>
-  <defs><linearGradient id="witch" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5E1B87"/><stop offset="1" stop-color="#241036"/></linearGradient></defs>
-  <path d="M82 271q218-66 436 0-16 33-55 33H137q-39 0-55-33Z" fill="#1B1126"/><path d="M96 266q204-52 408 0-16 21-45 21H141q-29 0-45-21Z" fill="url(#witch)"/>
-  <path d="M198 255q55-103 78-220 60 41 114 10-22 98 30 210-103-24-222 0Z" fill="url(#witch)"/><path d="M276 35q61 29 114 10-34 52-88 51Z" fill="#A53CE6"/>
-  <path d="M197 207q112-27 220 0l8 48q-116-22-236 0Z" fill="#302041"/><rect x="270" y="205" width="60" height="55" rx="8" fill="#F7B600"/><rect x="282" y="216" width="36" height="33" rx="3" fill="#302041"/><path d="M175 255q133-30 250 0" fill="none" stroke="#B552EC" stroke-width="6" opacity=".65"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
+  <title id="title">Chapéu reto de Halloween</title>
+  <path d="M80 271q220-75 440 0l-19 28H99z" fill="#2A163A"/>
+  <path d="m188 259 112-221 112 221q-112-26-224 0Z" fill="#5C2380"/>
+  <path d="M181 205q119-25 238 0l5 54q-124-25-248 0z" fill="#321946"/>
+  <rect x="274" y="208" width="52" height="48" rx="6" fill="#FFB800"/>
+  <rect x="285" y="219" width="30" height="26" rx="2" fill="#321946"/>
 </svg>

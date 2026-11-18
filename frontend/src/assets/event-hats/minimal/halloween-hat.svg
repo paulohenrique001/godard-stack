@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" role="img" aria-labelledby="title">
-  <title id="title">Chapéu reto de Halloween</title>
-  <path d="M80 271q220-75 440 0l-19 28H99z" fill="#2A163A"/>
-  <path d="m188 259 112-221 112 221q-112-26-224 0Z" fill="#5C2380"/>
-  <path d="M181 205q119-25 238 0l5 54q-124-25-248 0z" fill="#321946"/>
-  <rect x="274" y="208" width="52" height="48" rx="6" fill="#FFB800"/>
-  <rect x="285" y="219" width="30" height="26" rx="2" fill="#321946"/>
-</svg>

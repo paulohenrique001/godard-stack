@@ -1,24 +1,27 @@
 {
   "name": "godard-stack",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "setup": "node scripts/setup.mjs",
-    "predev": "npm run setup",
-    "dev": "concurrently --names agente,containers --kill-others \"npm:dev:agent\" \"npm:dev:containers\"",
-    "dev:agent": "node scripts/agent.mjs --watch",
-    "dev:containers": "docker compose -f docker-compose.yml -f docker-compose.dev.yml watch",
-    "agent": "node scripts/agent.mjs",
-    "build": "npm run setup && npm run build:agent && docker compose build",
-    "build:agent": "mvn -B -q -f agent/pom.xml package",
-    "prestart": "npm run setup",
-    "start": "docker compose up --build -d && npm run agent",
-    "rebuild": "node scripts/rebuild.mjs",
-    "stop": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
-    "logs": "docker compose logs -f",
-    "reset": "docker compose down -v && docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v"
+    "backend:verify": "JAVA_HOME=${JAVA_HOME:-/home/paulo-henrique/.jdks/corretto-21.0.11} mvn -B -Dmaven.repo.local=build/maven-repository -f backend/pom.xml verify",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "prepare:resources": "node scripts/prepare-desktop-resources.mjs",
+    "desktop:dev": "npm run backend:verify && TAURI_CONFIG='{\"bundle\":{\"resources\":[]}}' tauri dev",
+    "desktop:build": "node scripts/build-desktop.mjs",
+    "format": "npm run format:backend && npm run format:frontend",
+    "format:backend": "JAVA_HOME=${JAVA_HOME:-/home/paulo-henrique/.jdks/corretto-21.0.11} mvn -B -Dmaven.repo.local=build/maven-repository -f backend/pom.xml spotless:apply",
+    "format:check": "npm run format:backend:check && npm run format:frontend:check",
+    "format:backend:check": "JAVA_HOME=${JAVA_HOME:-/home/paulo-henrique/.jdks/corretto-21.0.11} mvn -B -Dmaven.repo.local=build/maven-repository -f backend/pom.xml spotless:check",
+    "format:frontend": "npm --prefix frontend run format",
+    "format:frontend:check": "npm --prefix frontend run format:check",
+    "dev:reset": "APP=$HOME/.local/share/com.katomus.godardstack && rm -f $APP/data/godard-stack.db $APP/data/godard-stack.db-wal $APP/data/godard-stack.db-shm $APP/secrets/connection.key $APP/runtime/ready-*.json && echo 'Dev reset concluído.'"
   },
   "devDependencies": {
-    "concurrently": "10.0.6"
+    "@tauri-apps/cli": "^2.12.0"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-updater": "2.12.0"
   }
 }

@@ -1,8 +1,0 @@
-.env
-.idea
-.git
-node_modules
-agent
-**/node_modules
-**/dist
-**/target

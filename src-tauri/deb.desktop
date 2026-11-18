@@ -1,0 +1,9 @@
+[Desktop Entry]
+Categories={{categories}}
+Comment={{comment}}
+Exec={{exec}}
+StartupWMClass=godard-stack
+Icon={{icon}}
+Name=Godard
+Terminal=false
+Type=Application

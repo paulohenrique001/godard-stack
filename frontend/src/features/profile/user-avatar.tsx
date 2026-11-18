@@ -1,24 +1,27 @@
 import { useState } from 'react'
 import { LuUser } from 'react-icons/lu'
-import { cn } from '@/lib/utils'
+import { cn } from '../../shared/lib/cn'
 
-const AVATAR_URL = 'https://api.dicebear.com/10.x/critters/svg?borderRadius=50&tags=animation&translateY=10&scale=1.05&seed='
+const AVATAR_URL =
+  'https://api.dicebear.com/10.x/critters/svg?borderRadius=50&tags=none&translateY=10&scale=1.05&seed='
 const RANDOM_SEED_LENGTH = 8
 const SEED_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
-export const randomSeed = () =>
-  Array.from(
+export function randomAvatarSeed() {
+  return Array.from(
     { length: RANDOM_SEED_LENGTH },
     () => SEED_CHARACTERS[Math.floor(Math.random() * SEED_CHARACTERS.length)],
   ).join('')
+}
 
-const EMPTY_SEED = randomSeed()
+const EMPTY_AVATAR_SEED = randomAvatarSeed()
 
-const avatarSeed = (name: string) => name.trim().toUpperCase() || EMPTY_SEED
-const avatarUrl = (seed: string) => `${AVATAR_URL}${encodeURIComponent(seed)}`
+function avatarSeed(name: string) {
+  return name.trim().toUpperCase() || EMPTY_AVATAR_SEED
+}
 
-export function preloadAvatar(name: string) {
-  new Image().src = avatarUrl(avatarSeed(name))
+function avatarUrl(seed: string) {
+  return `${AVATAR_URL}${encodeURIComponent(seed)}`
 }
 
 type UserAvatarProps = {

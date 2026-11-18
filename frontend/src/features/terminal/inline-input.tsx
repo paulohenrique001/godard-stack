@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent } from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '../../shared/lib/cn'
 
 type InlineInputProps = {
   value: string
@@ -10,7 +10,14 @@ type InlineInputProps = {
   onCancel: () => void
 }
 
-export function InlineInput({ value, label, maxLength, className, onCommit, onCancel }: InlineInputProps) {
+export function InlineInput({
+  value,
+  label,
+  maxLength,
+  className,
+  onCommit,
+  onCancel,
+}: InlineInputProps) {
   const finished = useRef(false)
 
   const commit = (text: string) => {

@@ -1,55 +1,148 @@
-import { useState } from 'react'
-import { AppLayout } from '@/features/layout/app-layout'
-import { DEFAULT_PAGE, type Page } from '@/features/layout/pages'
-import { OnboardingScreen } from '@/features/onboarding/onboarding-screen'
-import type { HealthIssue } from '@/features/splash/health-issues'
-import { SplashScreen } from '@/features/splash/splash-screen'
-
-type Stage = 'splash' | 'onboarding' | 'app'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useAppBootstrap } from './features/app/use-app-bootstrap'
+import { useAutoRecovery } from './features/app/use-auto-recovery'
+import { Onboarding } from './features/onboarding/onboarding'
+import { adjustFontScale, applyFontScale, loadFontScaleIndex } from './features/preferences/font-size'
+import { applyMotion, applyTheme, resolveTheme } from './features/preferences/theme'
+import { AppShell } from './features/shell/app-shell'
+import { ExitDialog } from './features/shell/exit-dialog'
+import { ExitGuardProvider, useIsExitBlocked } from './features/shell/exit-guard'
+import { TextContextMenu } from './features/shell/text-context-menu'
+import { runDesktopWindowAction } from './features/shell/window-actions'
+import { restoreWindowState, setupWindowStateTracking } from './features/shell/window-state'
+import { SplashScreen } from './features/splash/splash-screen'
 
 export default function App() {
-  const [stage, setStage] = useState<Stage>('splash')
-  const [userName, setUserName] = useState('')
-  const [avatarSeed, setAvatarSeed] = useState<string | null>(null)
-  const [initialPage, setInitialPage] = useState<Page>(DEFAULT_PAGE)
-  const [warnings, setWarnings] = useState<HealthIssue[]>([])
+  return (
+    <ExitGuardProvider>
+      <AppInner />
+      <TextContextMenu />
+    </ExitGuardProvider>
+  )
+}
 
-  const enter = (name: string, seed: string | null) => {
-    setUserName(name)
-    setAvatarSeed(seed)
-    setStage('app')
+function AppInner() {
+  const {
+    runtime,
+    state,
+    error,
+    retry,
+    refreshDashboard,
+    updateProfile,
+    updatePreferences,
+    eraseActivities,
+  } = useAppBootstrap()
+  const recovery = useAutoRecovery(runtime.status === 'failed', retry)
+  const [exitConfirmationOpen, setExitConfirmationOpen] = useState(false)
+  const allowWindowClose = useRef(false)
+  const isExitBlocked = useIsExitBlocked()
+
+  useEffect(() => {
+    applyFontScale(loadFontScaleIndex())
+    void restoreWindowState()
+    return setupWindowStateTracking()
+  }, [])
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      if (e.key === '=' || e.key === '+') {
+        e.preventDefault()
+        adjustFontScale(1)
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        adjustFontScale(-1)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  useEffect(() => {
+    if (!('__TAURI_INTERNALS__' in window)) return
+
+    let disposed = false
+    let unlisten: (() => void) | undefined
+    void getCurrentWindow()
+      .onCloseRequested((event) => {
+        if (allowWindowClose.current) return
+        if (!isExitBlocked()) {
+          allowWindowClose.current = true
+          return
+        }
+        event.preventDefault()
+        setExitConfirmationOpen(true)
+      })
+      .then((stopListening) => {
+        if (disposed) {
+          stopListening()
+          return
+        }
+        unlisten = stopListening
+      })
+      .catch(() => undefined)
+
+    return () => {
+      disposed = true
+      unlisten?.()
+    }
+  }, [])
+
+  const confirmExit = () => {
+    allowWindowClose.current = true
+    runDesktopWindowAction((appWindow) => appWindow.close())
   }
 
-  const finishSplash = (
-    name: string | null,
-    seed: string | null,
-    lastPage: Page,
-    issues: HealthIssue[],
-    needsServiceFolder: boolean,
-  ) => {
-    setWarnings(issues)
-    setInitialPage(lastPage)
-    setAvatarSeed(seed)
-    if (name === null || needsServiceFolder) {
-      setUserName(name ?? '')
-      setStage('onboarding')
+  const requestExit = () => {
+    if (!isExitBlocked()) {
+      allowWindowClose.current = true
+      runDesktopWindowAction((appWindow) => appWindow.close())
     } else {
-      enter(name, seed)
+      setExitConfirmationOpen(true)
     }
   }
 
+  const exitDialog = exitConfirmationOpen && (
+    <ExitDialog onCancel={() => setExitConfirmationOpen(false)} onConfirm={confirmExit} />
+  )
+  if (runtime.status !== 'ready' || state === null) {
+    return (
+      <Fragment>
+        <SplashScreen runtime={runtime} error={error} recovery={recovery} onRequestExit={requestExit} />
+        {exitDialog}
+      </Fragment>
+    )
+  }
+
+  if (state.user === null) {
+    const theme = resolveTheme(state.preferences.theme)
+    const toggleTheme = () => {
+      const nextTheme = theme === 'dark' ? 'light' : 'dark'
+      applyTheme(nextTheme)
+      void updatePreferences({ ...state.preferences, theme: nextTheme })
+    }
+    return (
+      <Fragment>
+        <Onboarding onComplete={updateProfile} theme={theme} onToggleTheme={toggleTheme} onRequestExit={requestExit} />
+        {exitDialog}
+      </Fragment>
+    )
+  }
+
   return (
-    <div className="flex h-full flex-col">
-      {warnings.map((warning) => (
-        <p key={warning.title} role="alert" className="shrink-0 bg-warning/15 px-4 py-2 text-sm">
-          {warning.title}. {warning.hint}
-        </p>
-      ))}
-      <div className="min-h-0 flex-1">
-        {stage === 'splash' && <SplashScreen onFinish={finishSplash} />}
-        {stage === 'onboarding' && <OnboardingScreen initialName={userName} initialAvatarSeed={avatarSeed} onComplete={enter} />}
-        {stage === 'app' && <AppLayout userName={userName} avatarSeed={avatarSeed} initialPage={initialPage} />}
-      </div>
-    </div>
+    <Fragment>
+      <AppShell
+        runtime={runtime}
+        state={state}
+        onProfileChange={updateProfile}
+        onPreferencesChange={updatePreferences}
+        onActivitiesCleared={eraseActivities}
+        onRefresh={refreshDashboard}
+        onRequestExit={requestExit}
+        onApplyTheme={applyTheme}
+      />
+      {exitDialog}
+    </Fragment>
   )
 }

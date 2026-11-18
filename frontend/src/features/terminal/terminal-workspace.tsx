@@ -1,13 +1,25 @@
-import { useEffect, useState } from 'react'
-import { LuEraser, LuLoaderCircle, LuPlus, LuRefreshCw, LuSearch, LuX } from 'react-icons/lu'
-import { Button } from '@/components/ui/button'
-import { TerminalTabBar } from '@/features/terminal/terminal-tab-bar'
-import { TerminalView, type CommandInsertion, type TerminalMachine, type TerminalStatus } from '@/features/terminal/terminal-view'
-import { tabTitle, type useTerminalTabs } from '@/features/terminal/use-terminal-tabs'
-import { fetchMachineInfo } from '@/lib/api'
-import { cn } from '@/lib/utils'
-
-const START_DELAY_MS = 500
+import { useEffect, useRef, useState } from 'react'
+import {
+  LuCircleAlert,
+  LuEraser,
+  LuLoaderCircle,
+  LuPlus,
+  LuRefreshCw,
+  LuSearch,
+  LuSquareTerminal,
+  LuX,
+} from 'react-icons/lu'
+import {
+  acceptTerminalAccess,
+  fetchTerminalAccess,
+  type RuntimeStatus,
+  type SystemSnapshot,
+} from '../../api'
+import { TerminalTabBar } from './terminal-tab-bar'
+import { TerminalView } from './terminal-view'
+import type { CommandInsertion, TerminalMachine, TerminalStatus } from './types'
+import { tabTitle, useTerminalTabs } from './use-terminal-tabs'
+import { cn } from '../../shared/lib/cn'
 
 const SESSION_STATUS: Record<TerminalStatus, { label: string; className: string }> = {
   idle: { label: 'Pronto', className: 'bg-muted text-muted-foreground' },
@@ -17,160 +29,280 @@ const SESSION_STATUS: Record<TerminalStatus, { label: string; className: string 
 }
 
 type TerminalWorkspaceProps = {
-  terminal: ReturnType<typeof useTerminalTabs>
-  visible: boolean
-  focusRequest: number
+  runtime: RuntimeStatus
+  system: SystemSnapshot
+  theme: 'light' | 'dark'
   insertion: CommandInsertion | null
+  newConsoleRequest: number
+  onAccessChanged: () => void
 }
 
-export function TerminalWorkspace({ terminal, visible, focusRequest, insertion }: TerminalWorkspaceProps) {
-  const {
-    tabs,
-    persistenceError,
-    selectTab,
-    addTab,
-    closeTab,
-    renameTab,
-    setTabStatus,
-    reportPersistenceError,
-    clearPersistenceError,
-  } = terminal
+export function TerminalWorkspace({
+  runtime,
+  system,
+  theme,
+  insertion,
+  newConsoleRequest,
+  onAccessChanged,
+}: TerminalWorkspaceProps) {
+  const [available, setAvailable] = useState<boolean | null>(null)
+  const [unavailableReason, setUnavailableReason] = useState<string | null>(null)
+  const [checking, setChecking] = useState(true)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setChecking(true)
+    setFailed(false)
+    fetchTerminalAccess(runtime)
+      .then(async (next) => {
+        if (!active) return
+        if (!next.available) {
+          setAvailable(false)
+          setUnavailableReason(next.reason)
+          return
+        }
+        if (!next.accepted) {
+          try {
+            await acceptTerminalAccess(runtime)
+            onAccessChanged()
+          } catch {
+            if (active) setFailed(true)
+          }
+        }
+        if (active) setAvailable(true)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+      .finally(() => {
+        if (active) setChecking(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [runtime])
+
+  if (checking) {
+    return (
+      <TerminalStatusScreen
+        icon={LuLoaderCircle}
+        title="Preparando o terminal"
+        detail="Verificando o shell local disponível."
+        spinning
+      />
+    )
+  }
+  if (failed || available === false) {
+    return (
+      <TerminalStatusScreen
+        icon={LuCircleAlert}
+        title="Terminal indisponível"
+        detail={
+          failed
+            ? 'Não foi possível consultar o serviço local. Atualize a aplicação e tente novamente.'
+            : (unavailableReason ?? 'Não foi possível encontrar um shell seguro nesta máquina.')
+        }
+      />
+    )
+  }
+  return (
+    <TerminalConsole
+      runtime={runtime}
+      system={system}
+      theme={theme}
+      insertion={insertion}
+      newConsoleRequest={newConsoleRequest}
+    />
+  )
+}
+
+function TerminalStatusScreen({
+  icon: Icon,
+  title,
+  detail,
+  spinning = false,
+}: {
+  icon: typeof LuCircleAlert
+  title: string
+  detail: string
+  spinning?: boolean
+}) {
+  return (
+    <section className="animate-in fade-in flex h-full w-full items-center justify-center p-6 text-center duration-200">
+      <div className="max-w-md space-y-4">
+        <Icon
+          className={cn('mx-auto size-16 text-muted-foreground/50', spinning && 'animate-spin')}
+          strokeWidth={1.25}
+        />
+        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          Terminal local
+        </p>
+        <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+        <p className="text-muted-foreground">{detail}</p>
+      </div>
+    </section>
+  )
+}
+
+function TerminalConsole({
+  runtime,
+  system,
+  theme,
+  insertion,
+  newConsoleRequest,
+}: Omit<TerminalWorkspaceProps, 'onAccessChanged'>) {
+  const terminal = useTerminalTabs(runtime)
   const [starting, setStarting] = useState(false)
-  const [machine, setMachine] = useState<TerminalMachine | null>(null)
   const [clearRequest, setClearRequest] = useState(0)
   const [searchRequest, setSearchRequest] = useState(0)
   const [openedIds, setOpenedIds] = useState<number[]>([])
   const [renameFocus, setRenameFocus] = useState(0)
   const [reconnectRequest, setReconnectRequest] = useState(0)
-  const activeTab = tabs.find((tab) => tab.active)
+  const handledNewConsole = useRef(0)
+  const activeTab = terminal.tabs.find((tab) => tab.active)
   const activeId = activeTab?.id
   const status = SESSION_STATUS[activeTab?.status ?? 'idle']
+  const machine: TerminalMachine = { identity: `${system.user}@${system.hostname}` }
 
   useEffect(() => {
-    fetchMachineInfo().then((info) =>
-      setMachine({ identity: info ? `${info.user}@${info.hostname}` : '', home: info?.home ?? '' }),
-    )
-  }, [])
-
-  const sessionRunning = tabs.some((tab) => tab.status !== 'idle')
-
-  useEffect(() => {
-    if (!sessionRunning) {
-      return
+    if (activeId !== undefined) {
+      setOpenedIds((current) => (current.includes(activeId) ? current : [...current, activeId]))
     }
-    const warnBeforeLeaving = (event: BeforeUnloadEvent) => event.preventDefault()
-    window.addEventListener('beforeunload', warnBeforeLeaving)
-    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
-  }, [sessionRunning])
+  }, [activeId])
 
   useEffect(() => {
-    if (visible && activeId !== undefined && !openedIds.includes(activeId)) {
-      setOpenedIds([...openedIds, activeId])
+    if (terminal.loaded && newConsoleRequest > handledNewConsole.current) {
+      handledNewConsole.current = newConsoleRequest
+      void terminal.addTab()
     }
-  }, [visible, activeId, openedIds])
+  }, [newConsoleRequest, terminal])
 
-  const newTab = () => {
+  const newTab = async () => {
     setStarting(true)
-    setTimeout(async () => {
-      try {
-        await addTab()
-      } finally {
-        setStarting(false)
-      }
-    }, START_DELAY_MS)
+    await terminal.addTab()
+    setStarting(false)
   }
 
   return (
-    <div className={cn('animate-in fade-in flex h-full min-h-0 flex-col gap-4 p-6 duration-200', !visible && 'hidden')}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <div className="animate-in fade-in flex h-full min-h-0 flex-col gap-4 p-6 duration-200">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <h2 className="truncate text-xl font-semibold tracking-tight">
               {activeTab ? tabTitle(activeTab) : 'Console'}
             </h2>
-            <span className={cn('inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase', status.className)}>
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase',
+                status.className,
+              )}
+            >
               {status.label}
             </span>
           </div>
           <p className="truncate text-sm text-muted-foreground">
-            {activeTab?.cwd ?? machine?.identity ?? 'Nenhuma sessão selecionada'}
+            {activeTab?.cwd ?? machine.identity}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
+          <button
+            type="button"
             aria-label="Buscar no console"
             title="Buscar no console"
             disabled={activeId === undefined}
+            className="grid size-9 place-items-center rounded-lg border bg-card transition-colors hover:bg-muted disabled:opacity-50"
             onClick={() => setSearchRequest((request) => request + 1)}
           >
-            <LuSearch />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
+            <LuSearch className="size-4" />
+          </button>
+          <button
+            type="button"
             aria-label="Limpar histórico"
             title="Limpar histórico"
             disabled={activeId === undefined}
+            className="grid size-9 place-items-center rounded-lg border bg-card transition-colors hover:bg-muted disabled:opacity-50"
             onClick={() => setClearRequest((request) => request + 1)}
           >
-            <LuEraser />
-          </Button>
-          <Button className="uppercase" disabled={starting} onClick={newTab}>
-            {starting ? <LuLoaderCircle className="animate-spin" /> : <LuPlus />}
+            <LuEraser className="size-4" />
+          </button>
+          <button
+            type="button"
+            disabled={starting}
+            className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+            onClick={() => void newTab()}
+          >
+            {starting ? (
+              <LuLoaderCircle className="size-4 animate-spin" />
+            ) : (
+              <LuPlus className="size-4" />
+            )}
             Novo console
-          </Button>
+          </button>
           {activeTab?.status === 'disconnected' && (
-            <Button className="uppercase" variant="outline" onClick={() => setReconnectRequest((request) => request + 1)}>
-              <LuRefreshCw />
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted"
+              onClick={() => setReconnectRequest((request) => request + 1)}
+            >
+              <LuRefreshCw className="size-4" />
               Reconectar
-            </Button>
+            </button>
           )}
         </div>
       </header>
-      {persistenceError && (
-        <div role="alert" className="flex items-center justify-between gap-3 rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          <span>{persistenceError}</span>
+      {terminal.persistenceError && (
+        <div
+          role="alert"
+          className="flex shrink-0 items-center justify-between gap-3 rounded-lg border border-destructive/35 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          <span>{terminal.persistenceError}</span>
           <button
             type="button"
             aria-label="Fechar aviso"
             className="rounded-sm p-0.5 hover:bg-destructive/15"
-            onClick={clearPersistenceError}
+            onClick={terminal.clearPersistenceError}
           >
             <LuX className="size-4" />
           </button>
         </div>
       )}
       <TerminalTabBar
-        tabs={tabs}
-        onSelect={selectTab}
-        onClose={closeTab}
-        onRename={renameTab}
+        tabs={terminal.tabs}
+        onSelect={terminal.selectTab}
+        onClose={terminal.closeTab}
+        onRename={terminal.renameTab}
         onEditEnd={() => setRenameFocus((request) => request + 1)}
       />
       <div className="relative min-h-0 flex-1">
-        {machine !== null &&
-          tabs
-            .filter((tab) => openedIds.includes(tab.id))
-            .map((tab) => (
-              <div key={tab.id} className={cn('h-full', !tab.active && 'hidden')}>
-                <TerminalView
-                  tabId={tab.id}
-                  active={visible && tab.active}
-                  alive={tab.alive}
-                  cwd={tab.cwd}
-                  machine={machine}
-                  insertion={insertion}
-                  clearRequest={clearRequest}
-                  searchRequest={searchRequest}
-                  focusRequest={focusRequest + renameFocus}
-                  reconnectRequest={reconnectRequest}
-                  onStatusChange={(status) => setTabStatus(tab.id, status)}
-                  onPersistenceError={reportPersistenceError}
-                />
-              </div>
-            ))}
+        {terminal.tabs
+          .filter((tab) => openedIds.includes(tab.id))
+          .map((tab) => (
+            <div
+              key={tab.id}
+              id={`terminal-panel-${tab.id}`}
+              role="tabpanel"
+              aria-labelledby={`terminal-tab-${tab.id}`}
+              className={cn('h-full', !tab.active && 'hidden')}
+            >
+              <TerminalView
+                runtime={runtime}
+                tabId={tab.id}
+                active={tab.active}
+                alive={tab.alive}
+                cwd={tab.cwd}
+                machine={machine}
+                theme={theme}
+                insertion={insertion}
+                clearRequest={clearRequest}
+                searchRequest={searchRequest}
+                focusRequest={renameFocus}
+                reconnectRequest={reconnectRequest}
+                onStatusChange={(next) => terminal.setTabStatus(tab.id, next)}
+                onPersistenceError={terminal.reportPersistenceError}
+              />
+            </div>
+          ))}
       </div>
     </div>
   )

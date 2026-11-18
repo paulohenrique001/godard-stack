@@ -2,27 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { FitAddon } from '@xterm/addon-fit'
 import { SearchAddon } from '@xterm/addon-search'
 import { WebLinksAddon } from '@xterm/addon-web-links'
-import { WebglAddon } from '@xterm/addon-webgl'
 import { Terminal, type ITheme } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import { TerminalSearch } from '@/features/terminal/terminal-search'
-import { useTheme, type Theme } from '@/features/theme/theme-provider'
-import { clearTerminalTranscript, fetchTerminalTranscript } from '@/lib/api'
-
-export type TerminalStatus = 'idle' | 'connecting' | 'connected' | 'disconnected'
-
-export type CommandInsertion = {
-  command: string
-}
-
-export type TerminalMachine = {
-  identity: string
-  home: string
-}
+import {
+  clearTerminalTranscript,
+  createTerminalTicket,
+  fetchTerminalTranscript,
+  terminalSocketUrl,
+  type RuntimeStatus,
+} from '../../api'
+import { TerminalSearch } from './terminal-search'
+import type { CommandInsertion, TerminalMachine, TerminalStatus } from './types'
 
 const IDLE_IGNORED_KEYS = new Set(['\x03', '\x04'])
-export const TERMINAL_FONT_FAMILY = 'ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", monospace'
-const SCROLLBACK_LINES = 10000
+const SCROLLBACK_LINES = 10_000
 const SHELL_SETTLE_MS = 100
 const OSC_CURRENT_DIRECTORY = 7
 const PRINTABLE_INPUT = /^[^\x00-\x1f\x7f]+$/
@@ -36,13 +29,13 @@ const NEW_SESSION_CONTROL = '\u0001new'
 const ATTACHED_SESSION_CONTROL = '\u0001attached'
 const PERSISTENCE_ERROR_CONTROL = '\u0001persistence-error'
 
-export const TERMINAL_THEMES: Record<Theme, ITheme> = {
+const TERMINAL_THEMES: Record<'light' | 'dark', ITheme> = {
   light: {
     background: '#ffffff',
     foreground: '#23262b',
-    cursor: '#6a1760',
+    cursor: '#9a6a00',
     cursorAccent: '#ffffff',
-    selectionBackground: '#6a176033',
+    selectionBackground: '#ffb40033',
     black: '#1f2328',
     red: '#cf222e',
     green: '#1a7f37',
@@ -63,15 +56,15 @@ export const TERMINAL_THEMES: Record<Theme, ITheme> = {
   dark: {
     background: '#1b1e23',
     foreground: '#eceef0',
-    cursor: '#e3a3db',
+    cursor: '#ffd166',
     cursorAccent: '#1b1e23',
-    selectionBackground: '#e3a3db40',
+    selectionBackground: '#ffd16640',
     black: '#23262c',
     red: '#e8796d',
     green: '#62c79a',
     yellow: '#e5b567',
     blue: '#7fb2e5',
-    magenta: '#e3a3db',
+    magenta: '#ffd166',
     cyan: '#6fc3c9',
     white: '#c9cdd2',
     brightBlack: '#8d939b',
@@ -79,7 +72,7 @@ export const TERMINAL_THEMES: Record<Theme, ITheme> = {
     brightGreen: '#85d9b3',
     brightYellow: '#f0cb8c',
     brightBlue: '#a2c9ef',
-    brightMagenta: '#eec0e8',
+    brightMagenta: '#ffe39b',
     brightCyan: '#92d6da',
     brightWhite: '#eceef0',
   },
@@ -89,7 +82,7 @@ const writeAndWait = (terminal: Terminal, data: string) =>
   new Promise<void>((resolve) => terminal.write(data, resolve))
 
 function sessionDivider(columns: number) {
-  const side = '-'.repeat(Math.max((columns - SESSION_END_LABEL.length) / 2, 0))
+  const side = '-'.repeat(Math.max(Math.floor((columns - SESSION_END_LABEL.length) / 2), 0))
   return `\r\n\x1b[90m${side}${SESSION_END_LABEL}${side}\x1b[0m\r\n\r\n`
 }
 
@@ -105,27 +98,21 @@ async function settleCursor(terminal: Terminal) {
   }
 }
 
-function buildPrompt({ identity, home }: TerminalMachine, directory: string | null) {
-  const path = !directory || directory === home ? '~' : directory.replace(home + '/', '~/')
-  return identity ? `\x1b[01;32m${identity}\x1b[0m:\x1b[01;34m${path}\x1b[0m$ ` : '$ '
-}
-
-function loadWebgl(terminal: Terminal) {
-  try {
-    const webgl = new WebglAddon()
-    webgl.onContextLoss(() => webgl.dispose())
-    terminal.loadAddon(webgl)
-  } catch {
-    return
-  }
+function buildPrompt(machine: TerminalMachine, directory: string | null) {
+  const path = directory || '~'
+  return machine.identity
+    ? `\x1b[01;32m${machine.identity}\x1b[0m:\x1b[01;34m${path}\x1b[0m$ `
+    : '$ '
 }
 
 type TerminalViewProps = {
+  runtime: RuntimeStatus
   tabId: number
   active: boolean
   alive: boolean
   cwd: string | null
   machine: TerminalMachine
+  theme: 'light' | 'dark'
   insertion: CommandInsertion | null
   clearRequest: number
   searchRequest: number
@@ -136,11 +123,13 @@ type TerminalViewProps = {
 }
 
 export function TerminalView({
+  runtime,
   tabId,
   active,
   alive,
   cwd,
   machine,
+  theme,
   insertion,
   clearRequest,
   searchRequest,
@@ -156,15 +145,25 @@ export function TerminalView({
   const clearRef = useRef<() => void>(() => undefined)
   const reconnectRef = useRef<() => void>(() => undefined)
   const activeRef = useRef(active)
-  activeRef.current = active
+  const aliveRef = useRef(alive)
+  const cwdRef = useRef(cwd)
+  const runtimeRef = useRef(runtime)
+  const machineRef = useRef(machine)
   const [searching, setSearching] = useState(false)
-  const { theme } = useTheme()
+  activeRef.current = active
+  aliveRef.current = alive
+  cwdRef.current = cwd
+  runtimeRef.current = runtime
+  machineRef.current = machine
 
   useEffect(() => {
-    const host = hostRef.current!
+    const host = hostRef.current
+    if (!host) {
+      return
+    }
     const terminal = new Terminal({
-      cursorBlink: true,
-      fontFamily: TERMINAL_FONT_FAMILY,
+      cursorBlink: false,
+      fontFamily: 'ui-monospace, "Cascadia Mono", "DejaVu Sans Mono", monospace',
       fontSize: 14,
       lineHeight: 1.25,
       scrollback: SCROLLBACK_LINES,
@@ -176,7 +175,6 @@ export function TerminalView({
     terminal.loadAddon(search)
     terminal.loadAddon(new WebLinksAddon())
     terminal.open(host)
-    loadWebgl(terminal)
     terminalRef.current = terminal
     fitRef.current = fit
     searchRef.current = search
@@ -194,6 +192,11 @@ export function TerminalView({
         return false
       }
       if (event.shiftKey && event.code === 'KeyV') {
+        event.preventDefault()
+        navigator.clipboard
+          .readText()
+          .then((text) => terminal.paste(text))
+          .catch(() => undefined)
         return false
       }
       if (!event.shiftKey && event.code === 'KeyF' && terminal.buffer.active.type === 'normal') {
@@ -213,16 +216,18 @@ export function TerminalView({
     if (activeRef.current) {
       terminal.focus()
     }
+    const observer = new ResizeObserver(fitIfVisible)
+    observer.observe(host)
 
-    let directory = cwd
+    let directory = cwdRef.current
     const directoryHandler = terminal.parser.registerOscHandler(OSC_CURRENT_DIRECTORY, (data) => {
       directory = data
       return true
     })
-    const writePrompt = () => terminal.write(buildPrompt(machine, directory))
-
+    const writePrompt = () => terminal.write(buildPrompt(machineRef.current, directory))
     let restoring = true
     let disposed = false
+    let connecting = false
     let socket: WebSocket | null = null
     let pendingInput = ''
     let bufferedOutput = ''
@@ -230,15 +235,45 @@ export function TerminalView({
     let requiresRecovery = false
     let settleTimer: ReturnType<typeof setTimeout> | undefined
 
-    const startSession = (attaching: boolean) => {
+    const startSession = async (attaching: boolean) => {
+      if (disposed || socket || connecting) {
+        return
+      }
       requiresRecovery = false
+      connecting = true
       onStatusChange('connecting')
-      const scheme = location.protocol === 'https:' ? 'wss' : 'ws'
-      const session = new WebSocket(`${scheme}://${location.host}/api/terminal?tab=${tabId}`)
+      let ticket: string
+      try {
+        ticket = (await createTerminalTicket(runtimeRef.current, tabId)).ticket
+      } catch {
+        connecting = false
+        requiresRecovery = true
+        onStatusChange('disconnected')
+        terminal.write('\r\n[não foi possível iniciar a sessão — use Reconectar]\r\n')
+        return
+      }
+      if (disposed) {
+        connecting = false
+        return
+      }
+      let session: WebSocket
+      try {
+        session = new WebSocket(terminalSocketUrl(runtimeRef.current, tabId, ticket))
+      } catch {
+        connecting = false
+        requiresRecovery = true
+        onStatusChange('disconnected')
+        terminal.write('\r\n[não foi possível iniciar a sessão — use Reconectar]\r\n')
+        return
+      }
       socket = session
+      connecting = false
       let opened = false
 
       const revealShell = () => {
+        if (socket !== session) {
+          return
+        }
         shellReady = true
         const divider = attaching ? sessionDivider(terminal.cols) : ''
         terminal.write(CLEAR_LINE_SEQUENCE + divider + bufferedOutput)
@@ -250,11 +285,17 @@ export function TerminalView({
       }
 
       session.onopen = () => {
+        if (socket !== session) {
+          return
+        }
         opened = true
         onStatusChange('connected')
         session.send(`r${terminal.cols},${terminal.rows}`)
       }
       session.onmessage = (event) => {
+        if (socket !== session || typeof event.data !== 'string') {
+          return
+        }
         if (event.data === NEW_SESSION_CONTROL) {
           return
         }
@@ -278,7 +319,10 @@ export function TerminalView({
         clearTimeout(settleTimer)
         settleTimer = setTimeout(revealShell, SHELL_SETTLE_MS)
       }
-      session.onclose = async (event) => {
+      session.onclose = async () => {
+        if (socket !== session) {
+          return
+        }
         clearTimeout(settleTimer)
         const sessionWasVisible = shellReady
         await writeAndWait(terminal, bufferedOutput)
@@ -301,13 +345,13 @@ export function TerminalView({
     }
 
     reconnectRef.current = () => {
-      if (!disposed && !restoring && !socket) {
-        startSession(true)
+      if (!disposed && !restoring && !socket && !connecting) {
+        void startSession(true)
       }
     }
 
     const restore = async () => {
-      const transcript = await fetchTerminalTranscript(tabId).catch(() => {
+      const transcript = await fetchTerminalTranscript(runtimeRef.current, tabId).catch(() => {
         onPersistenceError('Não foi possível recuperar o histórico deste console.')
         return ''
       })
@@ -315,28 +359,28 @@ export function TerminalView({
         return
       }
       const restored = transcript.replaceAll(SESSION_END_MARKER, sessionDivider(terminal.cols))
-      if (alive) {
+      if (transcript) {
         await writeAndWait(terminal, restored)
-        restoring = false
-        startSession(true)
+      }
+      restoring = false
+      if (aliveRef.current) {
+        void startSession(true)
         return
       }
       if (transcript) {
-        await writeAndWait(terminal, restored)
         await settleCursor(terminal)
         if (!transcript.endsWith(SESSION_END_MARKER)) {
           await writeAndWait(terminal, sessionDivider(terminal.cols))
         }
       }
       if (!disposed) {
-        restoring = false
         writePrompt()
       }
     }
-    restore()
+    void restore()
 
     clearRef.current = () => {
-      clearTerminalTranscript(tabId)
+      clearTerminalTranscript(runtimeRef.current, tabId)
         .then(() => {
           if (disposed) {
             return
@@ -357,18 +401,17 @@ export function TerminalView({
         terminal.write(data)
       }
     }
-
     const input = terminal.onData((data) => {
       if (restoring) {
         return
       }
-      if (socket && shellReady) {
+      if (socket && shellReady && socket.readyState === WebSocket.OPEN) {
         socket.send(`i${data}`)
-      } else if (socket) {
+      } else if (socket || connecting) {
         queueInput(data)
       } else if (!requiresRecovery && !IDLE_IGNORED_KEYS.has(data)) {
         queueInput(data)
-        startSession(false)
+        void startSession(false)
       }
     })
     const resize = terminal.onResize(() => {
@@ -376,9 +419,6 @@ export function TerminalView({
         socket.send(`r${terminal.cols},${terminal.rows}`)
       }
     })
-    const observer = new ResizeObserver(fitIfVisible)
-    observer.observe(host)
-
     return () => {
       disposed = true
       observer.disconnect()
@@ -395,7 +435,7 @@ export function TerminalView({
       fitRef.current = null
       searchRef.current = null
     }
-  }, [])
+  }, [tabId])
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -421,20 +461,20 @@ export function TerminalView({
       terminalRef.current?.paste(insertion.command)
       terminalRef.current?.focus()
     }
-  }, [insertion])
+  }, [active, insertion])
 
   useEffect(() => {
     if (active && clearRequest > 0) {
       clearRef.current()
       terminalRef.current?.focus()
     }
-  }, [clearRequest])
+  }, [active, clearRequest])
 
   useEffect(() => {
     if (active && searchRequest > 0 && terminalRef.current?.buffer.active.type === 'normal') {
       setSearching(true)
     }
-  }, [searchRequest])
+  }, [active, searchRequest])
 
   const closeSearch = () => {
     searchRef.current?.clearDecorations()
@@ -443,8 +483,10 @@ export function TerminalView({
   }
 
   return (
-    <div className="relative h-full rounded-xl border bg-card p-3 shadow-xs">
-      {searching && searchRef.current && <TerminalSearch addon={searchRef.current} onClose={closeSearch} />}
+    <div className="relative h-full rounded-xl border bg-card p-3 shadow-sm">
+      {searching && searchRef.current && (
+        <TerminalSearch addon={searchRef.current} onClose={closeSearch} />
+      )}
       <div className="h-full w-full" ref={hostRef} />
     </div>
   )

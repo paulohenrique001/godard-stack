@@ -1,88 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="780" viewBox="100 225 600 540" role="img" aria-labelledby="title desc">
-  <title id="title">Godard Stack — mascote com olhos redondos</title>
-  <desc id="desc">Logo vetorial original com capacete dourado, cúpula de cérebro azul e roxo e pupilas brancas redondas em dois visores circulares.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="780" viewBox="100 225 600 540" role="img" aria-labelledby="title desc">
+  <title id="title">Godard Stack</title>
+  <desc id="desc">Mascote com capacete dourado, cérebro azul e roxo e visores circulares.</desc>
   <defs>
-    <linearGradient id="gold" x1=".15" y1="0" x2=".82" y2="1" objectBoundingBox="true">
-      <stop offset="0" stop-color="#FFCF30"/>
-      <stop offset=".46" stop-color="#FFB400"/>
-      <stop offset="1" stop-color="#F48A00"/>
-    </linearGradient>
-    <linearGradient id="goldLight" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#FFDA42"/>
-      <stop offset=".58" stop-color="#FFAB0C"/>
-      <stop offset="1" stop-color="#F28B00"/>
-    </linearGradient>
-    <linearGradient id="centerGold" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#FFD44A"/>
-      <stop offset=".55" stop-color="#FFB10A"/>
-      <stop offset="1" stop-color="#F59603"/>
-    </linearGradient>
-    <linearGradient id="brainBlue" x1="0" y1=".05" x2="1" y2="1">
-      <stop stop-color="#04A7FF"/>
-      <stop offset=".48" stop-color="#0966FA"/>
-      <stop offset="1" stop-color="#103CCC"/>
-    </linearGradient>
-    <linearGradient id="brainPurple" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#C132F6"/>
-      <stop offset=".62" stop-color="#9123F1"/>
-      <stop offset="1" stop-color="#6530DB"/>
-    </linearGradient>
-    <linearGradient id="eyes" x1="0" y1="0" x2=".25" y2="1">
-      <stop stop-color="#111B37"/>
-      <stop offset="1" stop-color="#1C2542"/>
-    </linearGradient>
-    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#FFDA45"/>
-      <stop offset=".55" stop-color="#FFAF00"/>
-      <stop offset="1" stop-color="#F58B03"/>
-    </linearGradient>
-    <clipPath id="brainClip">
-      <path d="M181 541 C182 393 274 311 391 308 C514 303 622 399 622 541 L622 610 L181 610 Z"/>
-    </clipPath>
+    <linearGradient id="gold" x1=".15" y1="0" x2=".82" y2="1"><stop offset="0" stop-color="#FFCF30"/><stop offset=".46" stop-color="#FFB400"/><stop offset="1" stop-color="#F48A00"/></linearGradient>
+    <linearGradient id="goldLight" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFDA42"/><stop offset=".58" stop-color="#FFAB0C"/><stop offset="1" stop-color="#F28B00"/></linearGradient>
+    <linearGradient id="centerGold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFD44A"/><stop offset=".55" stop-color="#FFB10A"/><stop offset="1" stop-color="#F59603"/></linearGradient>
+    <linearGradient id="brainBlue" x1="0" y1=".05" x2="1" y2="1"><stop stop-color="#04A7FF"/><stop offset=".48" stop-color="#0966FA"/><stop offset="1" stop-color="#103CCC"/></linearGradient>
+    <linearGradient id="brainPurple" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#C132F6"/><stop offset=".62" stop-color="#9123F1"/><stop offset="1" stop-color="#6530DB"/></linearGradient>
+    <linearGradient id="eyes" x1="0" y1=".05" x2=".25" y2="1"><stop stop-color="#111B37"/><stop offset="1" stop-color="#1C2542"/></linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFDA45"/><stop offset=".55" stop-color="#FFAF00"/><stop offset="1" stop-color="#F58B03"/></linearGradient>
+    <clipPath id="brainClip"><path d="M181 541 C182 393 274 311 391 308 C514 303 622 399 622 541 L622 610 L181 610 Z"/></clipPath>
   </defs>
-
-  <!-- Estrutura traseira do capacete -->
-  <path id="casco" d="M150 550 C150 385 254 270 400 270 C546 270 650 384 650 550 L650 648 C650 688 612 715 564 715 L236 715 C188 715 150 687 150 648 Z" fill="url(#gold)"/>
+  <path d="M150 550 C150 385 254 270 400 270 C546 270 650 384 650 550 L650 648 C650 688 612 715 564 715 L236 715 C188 715 150 687 150 648 Z" fill="url(#gold)"/>
   <path d="M166 555 C167 399 266 291 400 291 C535 291 634 399 634 555 L634 627 L166 627 Z" fill="#F8A300"/>
-
-  <!-- Vidros duplos do cérebro -->
-  <g id="cerebro" clip-path="url(#brainClip)">
-    <path d="M171 305 H409 V626 H171 Z" fill="url(#brainBlue)"/>
-    <path d="M401 305 H637 V626 H401 Z" fill="url(#brainPurple)"/>
-    <!-- Dobras do cérebro: traços contínuos, simétricos e com pontas ocultas pelo aro/visor -->
-    <g id="linhas-cerebro-azul" fill="none" stroke="#95C9FF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M318 281 C304 326 295 362 306 388 C318 410 349 416 392 446"/>
-      <path d="M162 454 C207 399 268 380 306 388"/>
-      <path d="M163 502 C210 464 251 447 280 462 C301 472 313 491 326 512"/>
-    </g>
-    <g id="linhas-cerebro-roxo" transform="translate(800 0) scale(-1 1)" fill="none" stroke="#DAAEFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M318 281 C304 326 295 362 306 388 C318 410 349 416 392 446"/>
-      <path d="M162 454 C207 399 268 380 306 388"/>
-      <path d="M163 502 C210 464 251 447 280 462 C301 472 313 491 326 512"/>
-    </g>
+  <g clip-path="url(#brainClip)">
+    <path d="M171 305 H409 V626 H171 Z" fill="url(#brainBlue)"/><path d="M401 305 H637 V626 H401 Z" fill="url(#brainPurple)"/>
+    <g fill="none" stroke="#95C9FF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M318 281 C304 326 295 362 306 388 C318 410 349 416 392 446"/><path d="M162 454 C207 399 268 380 306 388"/><path d="M163 502 C210 464 251 447 280 462 C301 472 313 491 326 512"/></g>
+    <g transform="translate(800 0) scale(-1 1)" fill="none" stroke="#DAAEFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M318 281 C304 326 295 362 306 388 C318 410 349 416 392 446"/><path d="M162 454 C207 399 268 380 306 388"/><path d="M163 502 C210 464 251 447 280 462 C301 472 313 491 326 512"/></g>
   </g>
-
-  <!-- Frisos laterais, aro superior e travessa central -->
   <path d="M159 545 C157 379 265 280 400 280 C536 280 643 378 641 545" fill="none" stroke="url(#goldLight)" stroke-width="30" stroke-linecap="round"/>
-  <path d="M389 289 L410 289 L454 642 L346 642 Z" fill="url(#centerGold)"/>
-  <path d="M347 627 H453 L469 689 H330 Z" fill="#FFB20D"/>
-  <path d="M211 636 H589 V681 Q589 700 566 700 H234 Q211 700 211 681 Z" fill="url(#goldLight)"/>
-  <path d="M231 688 H565" stroke="#F09102" stroke-width="6" opacity=".5" stroke-linecap="round"/>
-
-  <!-- Aba lateral das duas orelhas -->
-  <path d="M158 558 C136 558 119 576 119 600 V660 C119 689 140 707 165 707 L192 692 L193 571 Z" fill="url(#goldLight)"/>
-  <path d="M642 558 C664 558 681 576 681 600 V660 C681 689 660 707 635 707 L608 692 L607 571 Z" fill="url(#goldLight)"/>
-
-  <!-- Óculos circulares com uma única pupila circular branca em cada lado -->
-  <g id="olho-esquerdo">
-    <circle cx="282" cy="596" r="116" fill="url(#rim)"/>
-    <circle cx="282" cy="596" r="98" fill="url(#eyes)"/>
-    <circle cx="282" cy="596" r="26" fill="#FFFFFF"/>
-  </g>
-  <g id="olho-direito">
-    <circle cx="518" cy="596" r="116" fill="url(#rim)"/>
-    <circle cx="518" cy="596" r="98" fill="url(#eyes)"/>
-    <circle cx="518" cy="596" r="26" fill="#FFFFFF"/>
-  </g>
+  <path d="M389 289 L410 289 L454 642 L346 642 Z" fill="url(#centerGold)"/><path d="M347 627 H453 L469 689 H330 Z" fill="#FFB20D"/><path d="M211 636 H589 V681 Q589 700 566 700 H234 Q211 700 211 681 Z" fill="url(#goldLight)"/><path d="M231 688 H565" stroke="#F09102" stroke-width="6" opacity=".5" stroke-linecap="round"/>
+  <path d="M158 558 C136 558 119 576 119 600 V660 C119 689 140 707 165 707 L192 692 L193 571 Z" fill="url(#goldLight)"/><path d="M642 558 C664 558 681 576 681 600 V660 C681 689 660 707 635 707 L608 692 L607 571 Z" fill="url(#goldLight)"/>
+  <g><circle cx="282" cy="596" r="116" fill="url(#rim)"/><circle cx="282" cy="596" r="98" fill="url(#eyes)"/><circle cx="282" cy="596" r="26" fill="#FFF"/></g>
+  <g><circle cx="518" cy="596" r="116" fill="url(#rim)"/><circle cx="518" cy="596" r="98" fill="url(#eyes)"/><circle cx="518" cy="596" r="26" fill="#FFF"/></g>
 </svg>

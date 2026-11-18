@@ -1,27 +1,53 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   createSavedCommand,
   deleteSavedCommand,
   fetchSavedCommands,
   updateSavedCommand,
+  type RuntimeStatus,
   type SavedCommand,
-} from '@/lib/api'
+} from '../../api'
 
-export function useSavedCommands() {
+export function useSavedCommands(runtime: RuntimeStatus, enabled: boolean) {
   const [commands, setCommands] = useState<SavedCommand[]>([])
 
-  const apply = (request: Promise<SavedCommand[]>) => {
-    request.then(setCommands).catch(() => undefined)
-  }
+  const reload = useCallback(() => {
+    if (!enabled) {
+      setCommands([])
+      return Promise.resolve()
+    }
+    return fetchSavedCommands(runtime)
+      .then(setCommands)
+      .catch(() => undefined)
+  }, [enabled, runtime])
 
   useEffect(() => {
-    apply(fetchSavedCommands())
-  }, [])
+    void reload()
+  }, [reload])
 
-  return {
-    commands,
-    createCommand: (command: string) => apply(createSavedCommand(command)),
-    updateCommand: (id: number, command: string) => apply(updateSavedCommand(id, command)),
-    deleteCommand: (id: number) => apply(deleteSavedCommand(id)),
-  }
+  const createCommand = useCallback(
+    async (command: string) => {
+      await createSavedCommand(runtime, command)
+      await reload()
+    },
+    [reload, runtime],
+  )
+
+  const updateCommand = useCallback(
+    async (id: number, command: string) => {
+      await updateSavedCommand(runtime, id, command)
+      await reload()
+    },
+    [reload, runtime],
+  )
+
+  const removeCommand = useCallback(
+    async (id: number) => {
+      await deleteSavedCommand(runtime, id)
+      await reload()
+    },
+    [reload, runtime],
+  )
+
+  return { commands, createCommand, updateCommand, removeCommand }
 }
